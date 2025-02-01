@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Cassandra;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +5,10 @@ namespace HighScale.Infrastructure.Migrations.MigrationRunner;
 
 public class MigrationRunner
 {
+    private const string MigrationScriptsPath = "../HighScale.Infrastructure/Migrations/Scripts";
+    private const string CassandraScriptExtension = ".cql";
+    private static readonly char[] Separator = ['\\', '/'];
+
     public Task RunMigrations(IServiceCollection services)
     {
         try
@@ -18,18 +17,16 @@ public class MigrationRunner
             var session = serviceProvider.GetService<ISession>()
                 ?? throw new InvalidOperationException("Session for ScyllaDb is not initialize properly");
 
-            const string cassandraScriptExtension = ".cql";
-            
             session.CreateKeyspaceIfNotExists("high_scale", new Dictionary<string, string>()
             {
                 { "class", "SimpleStrategy" },
                 { "replication_factor", "2" },
             });
-            
+
             session.Execute(new SimpleStatement(
                 "CREATE TABLE IF NOT EXISTS high_scale.migrations (migration_id text PRIMARY KEY, applied_at timestamp)"
                 ));
-            
+
             //Get the current migrations
             var migrations = session.Execute(new SimpleStatement(
                 "SELECT migration_id from high_scale.migrations"
@@ -37,14 +34,17 @@ public class MigrationRunner
             var appliedMigrations = migrations.Select(x => x.GetValue<string>("migration_id")).ToHashSet();
 
             //Apply the new migrations
-            var migrationScripts = Directory.EnumerateFiles("../HighScale.Infrastructure/Migrations/Scripts", $"*{cassandraScriptExtension}");
+            var migrationScripts = Directory.EnumerateFiles(MigrationScriptsPath, $"*{CassandraScriptExtension}")
+                .Select(filepath => filepath.Split(Separator).Last())
+                .ToList();
+
             foreach (var script in migrationScripts)
             {
-                var scriptWithoutExtension = script.Replace(cassandraScriptExtension, "");
+                var scriptWithoutExtension = script.Replace(CassandraScriptExtension, "");
 
                 if (appliedMigrations.Contains(scriptWithoutExtension))
                     continue;
-                
+
                 var cql = File.ReadAllText(script);
                 session.Execute(new SimpleStatement(cql));
 

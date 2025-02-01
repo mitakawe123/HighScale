@@ -1,5 +1,3 @@
-using System;
-
 namespace HighScale.Domain.Models;
 
 public class Migrations 

@@ -2,7 +2,6 @@ using FastEndpoints;
 using FastEndpoints.Swagger;
 using HighScale.Application.Configurations;
 using HighScale.Infrastructure.Configurations;
-using Microsoft.AspNetCore.Builder;
 
 var bld = WebApplication.CreateBuilder();
 bld.Services

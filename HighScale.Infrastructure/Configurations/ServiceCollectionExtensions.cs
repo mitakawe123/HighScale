@@ -1,4 +1,3 @@
-using System;
 using Cassandra;
 using Cassandra.Mapping;
 using HighScale.Domain.Configurations.Settings;
@@ -9,7 +8,6 @@ using Microsoft.Extensions.Configuration;
 using ZiggyCreatures.Caching.Fusion;
 using ZiggyCreatures.Caching.Fusion.Backplane.StackExchangeRedis;
 using ZiggyCreatures.Caching.Fusion.Serialization.SystemTextJson;
-using HighScale.Infrastructure.Migrations;
 using HighScale.Infrastructure.Migrations.MigrationRunner;
 
 namespace HighScale.Infrastructure.Configurations;
