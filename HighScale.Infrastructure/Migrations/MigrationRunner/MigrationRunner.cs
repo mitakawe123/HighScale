@@ -35,17 +35,17 @@ public class MigrationRunner
 
             //Apply the new migrations
             var migrationScripts = Directory.EnumerateFiles(MigrationScriptsPath, $"*{CassandraScriptExtension}")
-                .Select(filepath => filepath.Split(Separator).Last())
+                .Select(filepath => new {fileName = filepath.Split(Separator).Last(), filePath = filepath })
                 .ToList();
 
             foreach (var script in migrationScripts)
             {
-                var scriptWithoutExtension = script.Replace(CassandraScriptExtension, "");
+                var scriptWithoutExtension = script.fileName.Replace(CassandraScriptExtension, "");
 
                 if (appliedMigrations.Contains(scriptWithoutExtension))
                     continue;
 
-                var cql = File.ReadAllText(script);
+                var cql = File.ReadAllText(script.filePath);
                 session.Execute(new SimpleStatement(cql));
 
                 session.Execute(new SimpleStatement(
