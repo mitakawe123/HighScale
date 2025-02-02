@@ -17,10 +17,4 @@
       <ProjectReference Include="..\HighScale.Infrastructure\HighScale.Infrastructure.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Reference Include="HighScale.Infrastructure">
-        <HintPath>bin\Debug\net9.0\HighScale.Infrastructure.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-
 </Project>

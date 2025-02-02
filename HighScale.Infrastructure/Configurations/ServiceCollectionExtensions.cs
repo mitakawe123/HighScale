@@ -67,12 +67,15 @@ public static class ServiceCollectionExtensions
 
     private static void ApplyMigrations(this IServiceCollection services)
     {
-        var runner = new MigrationRunner();
-        runner.RunMigrations(services).Wait();
+        MigrationRunner.RunMigrations(services);
     }
     
     private static void AddScyllaDbMappings()
     {
         MappingConfiguration.Global.Define<MigrationsMapping>();
+        MappingConfiguration.Global.Define<UserMapping>();
+        MappingConfiguration.Global.Define<OrdersMappings>();
+        MappingConfiguration.Global.Define<LogsMappings>();
+        MappingConfiguration.Global.Define<ProductsMappings>();
     }
 }

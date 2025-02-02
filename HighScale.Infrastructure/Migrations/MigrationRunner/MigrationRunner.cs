@@ -3,13 +3,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace HighScale.Infrastructure.Migrations.MigrationRunner;
 
-public class MigrationRunner
+public abstract class MigrationRunner
 {
     private const string MigrationScriptsPath = "../HighScale.Infrastructure/Migrations/Scripts";
     private const string CassandraScriptExtension = ".cql";
     private static readonly char[] Separator = ['\\', '/'];
 
-    public Task RunMigrations(IServiceCollection services)
+    public static void RunMigrations(IServiceCollection services)
     {
         try
         {
@@ -35,8 +35,7 @@ public class MigrationRunner
 
             //Apply the new migrations
             var migrationScripts = Directory.EnumerateFiles(MigrationScriptsPath, $"*{CassandraScriptExtension}")
-                .Select(filepath => new {fileName = filepath.Split(Separator).Last(), filePath = filepath })
-                .ToList();
+                .Select(filepath => new { fileName = filepath.Split(Separator).Last(), filePath = filepath });
 
             foreach (var script in migrationScripts)
             {
@@ -45,16 +44,22 @@ public class MigrationRunner
                 if (appliedMigrations.Contains(scriptWithoutExtension))
                     continue;
 
-                var cql = File.ReadAllText(script.filePath);
-                session.Execute(new SimpleStatement(cql));
+                var cqlScripts = File.ReadAllText(script.filePath)
+                    .Split(';')
+                    .Select(x => x.Trim())
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .ToArray();
 
+                foreach (var cql in cqlScripts)
+                {
+                    session.Execute(new SimpleStatement(cql));
+                }
+    
                 session.Execute(new SimpleStatement(
                     "INSERT INTO high_scale.migrations (migration_id, applied_at) VALUES (?, ?)",
                     scriptWithoutExtension, DateTime.UtcNow
                 ));
             }
-            
-            return Task.CompletedTask;
         }
         catch (InvalidOperationException ex)
         {
